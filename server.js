@@ -11,6 +11,7 @@ const connection = mysql.createConnection({
   database: "employee_db",
 });
 
+// Create a function to provide initial prompt and route to other functions
 const runApp = () => {
   inquirer
     .prompt({
@@ -25,6 +26,7 @@ const runApp = () => {
         "Add Role",
         "Add Employee",
         "Update Role",
+        "Exit",
       ],
     })
     .then((answer) => {
@@ -50,6 +52,9 @@ const runApp = () => {
         case "Update Role":
           updateRole();
           break;
+        case "Exit":
+          connection.end();
+          break;
         default:
           console.log(`Invalid Action: ${answer.action}`);
           break;
@@ -59,7 +64,8 @@ const runApp = () => {
 
 // Display all employees in a table and run app again
 const viewEmployees = () => {
-  connection.query("SELECT * FROM employees", (err, data) => {
+  // TODO: Add additional join for manager field (first and last name)
+  connection.query("SELECT employees.id, employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id", (err, data) => {
     if (err) throw err;
     console.table(data);
     runApp();
@@ -89,7 +95,7 @@ const addDepartment = () => {
 // Add a new role to the database using prompts
 const addRole = () => {
   inquirer
-    .prompt(
+    .prompt([
       {
         name: "title",
         type: "input",
@@ -104,8 +110,8 @@ const addRole = () => {
         name: "department",
         type: "input",
         message: "New role department ID:",
-      }
-    )
+      },
+    ])
     .then((answers) => {
       connection.query(
         `INSERT INTO roles (title, salary, department_id) VALUES ("${answers.title}", ${answers.salary}, ${answers.department})`,
@@ -118,11 +124,46 @@ const addRole = () => {
     });
 };
 
+// Add a new employee to the database using prompts
+const addEmployee = () => {
+  inquirer
+    .prompt([
+      {
+        name: "first",
+        type: "input",
+        message: "First name:",
+      },
+      {
+        name: "last",
+        type: "last",
+        message: "Last name:",
+      },
+      {
+        name: "role",
+        type: "input",
+        message: "Role:",
+      },
+      {
+        name: "manager",
+        type: "input",
+        message: "Manager:",
+      },
+    ])
+    .then((answers) => {
+      connection.query(
+        `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answers.first}", "${answers.last}", ${answers.role}, ${answers.manager})`,
+        (err, data) => {
+          if (err) throw err;
+          console.log("New employee added!");
+          runApp();
+        }
+      );
+    });
+};
+
 // Connect to the database and start app
 connection.connect((err) => {
   if (err) throw err;
   console.log("Connection Thread ID: ", connection.threadId);
   runApp();
 });
-
-// connection.end();
