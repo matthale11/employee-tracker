@@ -74,19 +74,9 @@ const viewEmployees = () => {
   );
 };
 
-// TODO: Create a function to get the existing department names and provide to viewDepartments
-const getDepartments = () => {
-  connection.query("SELECT title FROM departments"),
-  (err, data) => {
-    if (err) throw (err);
-    return data;
-  }
-}
-
 // Display all employee in the same department
 const viewDepartment = () => {
-  // TODO: Find correct place for this function
-  getDepartments();
+  // TODO: Add query to get department names
   inquirer
     .prompt({
       name: "department",
@@ -106,10 +96,9 @@ const viewDepartment = () => {
     });
 };
 
-// TODO: Create function to get role names and provide to viewRole
-
 // Display all employees with the same role
 const viewRole = () => {
+  // TODO: Add query to get role names
   inquirer
     .prompt({
       name: "role",
@@ -151,38 +140,50 @@ const addDepartment = () => {
 
 // Add a new role to the database using prompts
 const addRole = () => {
-  inquirer
-    .prompt([
-      {
-        name: "title",
-        type: "input",
-        message: "New role name:",
-      },
-      {
-        name: "salary",
-        type: "input",
-        message: "New role salary (USD):",
-      },
-      {
-        name: "department",
-        type: "input",
-        message: "New role department ID:",
-      },
-    ])
-    .then((answers) => {
-      connection.query(
-        `INSERT INTO roles (title, salary, department_id) VALUES ("${answers.title}", ${answers.salary}, ${answers.department})`,
-        (err, data) => {
-          if (err) throw err;
-          console.log("New role added!");
-          runApp();
-        }
-      );
+  // TODO: Add query to get department names
+  connection.query("SELECT id, title FROM departments", (err, res) => {
+    if (err) throw err;
+    const dept = res.map((department) => {
+      return {
+        name: department.title,
+        value: department.id,
+      };
     });
+    inquirer
+      .prompt([
+        {
+          name: "title",
+          type: "input",
+          message: "New role name:",
+        },
+        {
+          name: "salary",
+          type: "input",
+          message: "New role salary (USD):",
+        },
+        {
+          name: "department",
+          type: "list",
+          message: "New role department:",
+          choices: dept,
+        },
+      ])
+      .then((answers) => {
+        connection.query(
+          `INSERT INTO roles (title, salary, department_id) VALUES ("${answers.title}", ${answers.salary}, ${answers.department})`,
+          (err, data) => {
+            if (err) throw err;
+            console.log("New role added!");
+            runApp();
+          }
+        );
+      });
+  });
 };
 
 // Add a new employee to the database using prompts
 const addEmployee = () => {
+  // TODO: Query to get manager and roles names
   inquirer
     .prompt([
       {
