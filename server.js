@@ -21,7 +21,7 @@ const runApp = () => {
       choices: [
         "View Employees",
         "View Department",
-        "View Reports",
+        "View Role",
         "Add Department",
         "Add Role",
         "Add Employee",
@@ -37,8 +37,8 @@ const runApp = () => {
         case "View Department":
           viewDepartment();
           break;
-        case "View Manager":
-          viewManager();
+        case "View Role":
+          viewRole();
           break;
         case "Add Department":
           addDepartment();
@@ -64,21 +64,70 @@ const runApp = () => {
 
 // Display all employees in a table and run app again
 const viewEmployees = () => {
-  connection.query("SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, departments.title, CONCAT(mgr.first_name,' ',mgr.last_name) AS manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees mgr ON employees.manager_id = mgr.id", (err, data) => {
-    if (err) throw err;
-    console.table(data);
-    runApp();
-  });
+  connection.query(
+    "SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, departments.title, CONCAT(mgr.first_name,' ',mgr.last_name) AS manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees mgr ON employees.manager_id = mgr.id",
+    (err, data) => {
+      if (err) throw err;
+      console.table(data);
+      runApp();
+    }
+  );
 };
 
-// const viewDepartment = () => {
-//   // TODO: Add additional join for manager field (first and last name)
-//   connection.query("SELECT employees.id, employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id", (err, data) => {
-//     if (err) throw err;
-//     console.table(data);
-//     runApp();
-//   });
-// };
+// TODO: Create a function to get the existing department names and provide to viewDepartments
+const getDepartments = () => {
+  connection.query("SELECT title FROM departments"),
+  (err, data) => {
+    if (err) throw (err);
+    return data;
+  }
+}
+
+// Display all employee in the same department
+const viewDepartment = () => {
+  // TODO: Find correct place for this function
+  getDepartments();
+  inquirer
+    .prompt({
+      name: "department",
+      type: "list",
+      message: "Select department:",
+      choices: ["1", "2", "3"],
+    })
+    .then((answer) => {
+      connection.query(
+        `SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, CONCAT(mgr.first_name,' ',mgr.last_name) AS manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees mgr ON employees.manager_id = mgr.id WHERE departments.id = '${answer.department}'`,
+        (err, data) => {
+          if (err) throw err;
+          console.table(data);
+          runApp();
+        }
+      );
+    });
+};
+
+// TODO: Create function to get role names and provide to viewRole
+
+// Display all employees with the same role
+const viewRole = () => {
+  inquirer
+    .prompt({
+      name: "role",
+      type: "list",
+      message: "Select role:",
+      choices: ["1", "2", "3"],
+    })
+    .then((answer) => {
+      connection.query(
+        `SELECT employees.id, employees.first_name, employees.last_name, departments.title, CONCAT(mgr.first_name,' ',mgr.last_name) AS manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees mgr ON employees.manager_id = mgr.id WHERE employees.role_id = '${answer.role}'`,
+        (err, data) => {
+          if (err) throw err;
+          console.table(data);
+          runApp();
+        }
+      );
+    });
+};
 
 // Add a new department to the database
 const addDepartment = () => {
