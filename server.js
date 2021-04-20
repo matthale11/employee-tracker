@@ -76,29 +76,38 @@ const viewEmployees = () => {
 
 // Display all employee in the same department
 const viewDepartment = () => {
-  // TODO: Add query to get department names
-  inquirer
-    .prompt({
-      name: "department",
-      type: "list",
-      message: "Select department:",
-      choices: ["1", "2", "3"],
-    })
-    .then((answer) => {
-      connection.query(
-        `SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, CONCAT(mgr.first_name,' ',mgr.last_name) AS manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees mgr ON employees.manager_id = mgr.id WHERE departments.id = '${answer.department}'`,
-        (err, data) => {
-          if (err) throw err;
-          console.table(data);
-          runApp();
-        }
-      );
+  // Query to get department names
+  connection.query("SELECT id, title FROM departments", (err, res) => {
+    if (err) throw err;
+    const dept = res.map((department) => {
+      return {
+        name: department.title,
+        value: department.id,
+      };
     });
+    inquirer
+      .prompt({
+        name: "department",
+        type: "list",
+        message: "Select department:",
+        choices: dept,
+      })
+      .then((answer) => {
+        connection.query(
+          `SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, CONCAT(mgr.first_name,' ',mgr.last_name) AS manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees mgr ON employees.manager_id = mgr.id WHERE departments.id = '${answer.department}'`,
+          (err, data) => {
+            if (err) throw err;
+            console.table(data);
+            runApp();
+          }
+        );
+      });
+  });
 };
 
 // Display all employees with the same role
 const viewRole = () => {
-  // TODO: Add query to get role names
+  // TODO: Query to get role names
   inquirer
     .prompt({
       name: "role",
@@ -140,7 +149,7 @@ const addDepartment = () => {
 
 // Add a new role to the database using prompts
 const addRole = () => {
-  // TODO: Add query to get department names
+  // Query to get department names
   connection.query("SELECT id, title FROM departments", (err, res) => {
     if (err) throw err;
     const dept = res.map((department) => {
