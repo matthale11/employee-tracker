@@ -116,23 +116,23 @@ const viewRole = () => {
         value: roles.id,
       };
     });
-  inquirer
-    .prompt({
-      name: "role",
-      type: "list",
-      message: "Select role:",
-      choices: role,
-    })
-    .then((answer) => {
-      connection.query(
-        `SELECT employees.id, employees.first_name, employees.last_name, departments.title, CONCAT(mgr.first_name,' ',mgr.last_name) AS manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees mgr ON employees.manager_id = mgr.id WHERE employees.role_id = '${answer.role}'`,
-        (err, data) => {
-          if (err) throw err;
-          console.table(data);
-          runApp();
-        }
-      );
-    });
+    inquirer
+      .prompt({
+        name: "role",
+        type: "list",
+        message: "Select role:",
+        choices: role,
+      })
+      .then((answer) => {
+        connection.query(
+          `SELECT employees.id, employees.first_name, employees.last_name, departments.title, CONCAT(mgr.first_name,' ',mgr.last_name) AS manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees mgr ON employees.manager_id = mgr.id WHERE employees.role_id = '${answer.role}'`,
+          (err, data) => {
+            if (err) throw err;
+            console.table(data);
+            runApp();
+          }
+        );
+      });
   });
 };
 
@@ -202,39 +202,49 @@ const addRole = () => {
 // Add a new employee to the database using prompts
 const addEmployee = () => {
   // TODO: Query to get manager and roles names
-  inquirer
-    .prompt([
-      {
-        name: "first",
-        type: "input",
-        message: "First name:",
-      },
-      {
-        name: "last",
-        type: "last",
-        message: "Last name:",
-      },
-      {
-        name: "role",
-        type: "input",
-        message: "Role:",
-      },
-      {
-        name: "manager",
-        type: "input",
-        message: "Manager:",
-      },
-    ])
-    .then((answers) => {
-      connection.query(
-        `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answers.first}", "${answers.last}", ${answers.role}, ${answers.manager})`,
-        (err, data) => {
-          if (err) throw err;
-          console.log("New employee added!");
-          runApp();
-        }
-      );
+  connection.query("SELECT id, title FROM roles", (err, res) => {
+    if (err) throw err;
+    const role = res.map((roles) => {
+      return {
+        name: roles.title,
+        value: roles.id,
+      };
     });
+    inquirer
+      .prompt([
+        {
+          name: "first",
+          type: "input",
+          message: "First name:",
+        },
+        {
+          name: "last",
+          type: "last",
+          message: "Last name:",
+        },
+        {
+          name: "role",
+          type: "list",
+          message: "Role:",
+          choices: role,
+        },
+        {
+          name: "manager",
+          type: "input",
+          message: "Manager:",
+        },
+      ])
+      .then((answers) => {
+        connection.query(
+          `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answers.first}", "${answers.last}", ${answers.role}, ${answers.manager})`,
+          (err, data) => {
+            if (err) throw err;
+            console.log("New employee added!");
+            runApp();
+          }
+        );
+      });
+  });
 };
 
 // Connect to the database and start app
