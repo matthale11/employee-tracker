@@ -64,13 +64,21 @@ const runApp = () => {
 
 // Display all employees in a table and run app again
 const viewEmployees = () => {
-  // TODO: Add additional join for manager field (first and last name)
-  connection.query("SELECT employees.id, employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id", (err, data) => {
+  connection.query("SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, departments.title, CONCAT(mgr.first_name,' ',mgr.last_name) AS manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees mgr ON employees.manager_id = mgr.id", (err, data) => {
     if (err) throw err;
     console.table(data);
     runApp();
   });
 };
+
+// const viewDepartment = () => {
+//   // TODO: Add additional join for manager field (first and last name)
+//   connection.query("SELECT employees.id, employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id", (err, data) => {
+//     if (err) throw err;
+//     console.table(data);
+//     runApp();
+//   });
+// };
 
 // Add a new department to the database
 const addDepartment = () => {
