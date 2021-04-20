@@ -107,13 +107,21 @@ const viewDepartment = () => {
 
 // Display all employees with the same role
 const viewRole = () => {
-  // TODO: Query to get role names
+  // Query to get role names
+  connection.query("SELECT id, title FROM roles", (err, res) => {
+    if (err) throw err;
+    const role = res.map((roles) => {
+      return {
+        name: roles.title,
+        value: roles.id,
+      };
+    });
   inquirer
     .prompt({
       name: "role",
       type: "list",
       message: "Select role:",
-      choices: ["1", "2", "3"],
+      choices: role,
     })
     .then((answer) => {
       connection.query(
@@ -125,6 +133,7 @@ const viewRole = () => {
         }
       );
     });
+  });
 };
 
 // Add a new department to the database
