@@ -247,6 +247,57 @@ const addEmployee = () => {
   });
 };
 
+// Update employee role
+const updateRole = () => {
+  // Query to get manager and roles names
+  connection.query("SELECT id, title FROM roles", (err, res) => {
+    if (err) throw err;
+    const rol = res.map((roles) => {
+      return {
+        name: roles.title,
+        value: roles.id,
+      };
+    });
+    connection.query(
+      "SELECT id, first_name, last_name FROM employees",
+      (err, res) => {
+        if (err) throw err;
+        const emp = res.map((employee) => {
+          return {
+            name: employee.first_name + " " + employee.last_name,
+            value: employee.id,
+          };
+        });
+        inquirer
+          .prompt([
+            {
+              name: "employee",
+              type: "list",
+              message: "Employee:",
+              choices: emp,
+            },
+            {
+              name: "role",
+              type: "list",
+              message: "Role:",
+              choices: rol,
+            },
+          ])
+          .then((answers) => {
+            connection.query(
+              `UPDATE employees SET role_id = ${answers.role} WHERE id = ${answers.employee}`,
+              (err, data) => {
+                if (err) throw err;
+                console.log("Employee role updated!");
+                runApp();
+              }
+            );
+          });
+      }
+    );
+  });
+};
+
 // Connect to the database and start app
 connection.connect((err) => {
   if (err) throw err;
