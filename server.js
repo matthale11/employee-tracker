@@ -201,7 +201,7 @@ const addRole = () => {
 
 // Add a new employee to the database using prompts
 const addEmployee = () => {
-  // TODO: Query to get manager and roles names
+  // Query to get manager and roles names
   connection.query("SELECT id, title FROM roles", (err, res) => {
     if (err) throw err;
     const role = res.map((roles) => {
@@ -210,40 +210,50 @@ const addEmployee = () => {
         value: roles.id,
       };
     });
-    inquirer
-      .prompt([
-        {
-          name: "first",
-          type: "input",
-          message: "First name:",
-        },
-        {
-          name: "last",
-          type: "last",
-          message: "Last name:",
-        },
-        {
-          name: "role",
-          type: "list",
-          message: "Role:",
-          choices: role,
-        },
-        {
-          name: "manager",
-          type: "input",
-          message: "Manager:",
-        },
-      ])
-      .then((answers) => {
-        connection.query(
-          `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answers.first}", "${answers.last}", ${answers.role}, ${answers.manager})`,
-          (err, data) => {
-            if (err) throw err;
-            console.log("New employee added!");
-            runApp();
-          }
-        );
+    connection.query("SELECT id, first_name, last_name FROM employees WHERE manager_id IS NULL", (err, res) => {
+      if (err) throw err;
+      const mgr = res.map((managers) => {
+        return {
+          name: managers.first_name + " " + managers.last_name,
+          value: managers.id,
+        };
       });
+      inquirer
+        .prompt([
+          {
+            name: "first",
+            type: "input",
+            message: "First name:",
+          },
+          {
+            name: "last",
+            type: "last",
+            message: "Last name:",
+          },
+          {
+            name: "role",
+            type: "list",
+            message: "Role:",
+            choices: role,
+          },
+          {
+            name: "manager",
+            type: "list",
+            message: "Manager:",
+            choices: mgr,
+          },
+        ])
+        .then((answers) => {
+          connection.query(
+            `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answers.first}", "${answers.last}", ${answers.role}, ${answers.manager})`,
+            (err, data) => {
+              if (err) throw err;
+              console.log("New employee added!");
+              runApp();
+            }
+          );
+        });
+    });
   });
 };
 
